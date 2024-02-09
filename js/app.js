@@ -1,72 +1,130 @@
 const canvas = document.getElementById("gameField");
 const ctx = canvas.getContext("2d");
 
-const fieldWidth = canvas.offsetWidth;
-const fieldHeight = canvas.offsetHeight;
+const fieldWidth = canvas.clientWidth;
+const fieldHeight = canvas.clientHeight;
 const cellSize = 20;
+const frameRate = 34; // ~30fps (should not be more than 1000)
 
-const snakeSpeed = 20
+const snakeSpeed = 150; // pixels per second
 
-let snakeDirection = "up";
 let foodPos;
-let snakePosition = {
+let snake = [{
+  direction: "",
   x: 400, // start position
   y: 400  // start position
-}
+}]
+let turnHistory= [];
 
 document.addEventListener("keydown", userControl);
 
 function draw() {
+  const cellSizeHalf = cellSize / 2;
   ctx.clearRect(0, 0, fieldWidth, fieldHeight);
   ctx.fillStyle = "#111"
-  ctx.fillRect(snakePosition.x, snakePosition.y, cellSize, cellSize);
+  for (let el of snake) {
+    ctx.fillRect(el.x - cellSizeHalf, el.y - cellSizeHalf, cellSize, cellSize);
+  }
 
   if (!foodPos) {
-    foodPos = drawFood({undefined});
+    foodPos = drawFood({});
   }else {
     drawFood(foodPos);
   }
 
-  switch (snakeDirection) {
-    case "left":
-      if (snakePosition.x - snakeSpeed < 0) {
-        snakePosition.x = fieldWidth;
-        break;
-      }
-      snakePosition.x -= snakeSpeed;
-      break;
+  const foodBorders = {
+    x1: foodPos.x - cellSize,
+    x2: foodPos.x + cellSize,
+    y1: foodPos.y - cellSize,
+    y2: foodPos.y + cellSize,
+  }
 
-    case "up":
-      if (snakePosition.y - snakeSpeed < 0) {
-        snakePosition.y = fieldHeight;
-        break;
-      }
-      snakePosition.y -= snakeSpeed;
-      break;
+  const snakeSpeedLocal = snakeSpeed / (1000 / frameRate);
 
-    case "right":
-      if (snakePosition.x + snakeSpeed > fieldWidth) {
-        snakePosition.x = 0;
+  if (
+    (snake[0].y > foodBorders.y1) &&
+    (snake[0].y < foodBorders.y2) &&
+    (foodBorders.x1 < snake[0].x) &&
+    (foodBorders.x2 > snake[0].x)
+  ) {
+    switch (snake[0].direction) {
+      case "left":
+        collisionHandler("food", +cellSize, 0);
         break;
-      }
-      snakePosition.x += snakeSpeed;
-      break;
 
-    case "down":
-      if (snakePosition.y + snakeSpeed > fieldHeight) {
-        snakePosition.y = 0;
+      case "up":
+        collisionHandler("food", 0, +cellSize);
         break;
-      }
-      snakePosition.y += snakeSpeed;
-      break;
+
+      case "right":
+        collisionHandler("food", -cellSize, 0);
+        break;
+
+      case "down":
+        collisionHandler("food", 0, -cellSize);
+        break;
+    }
+  }
+
+  for (let snakeEl of snake) {
+    // if (turnHistory[snakeEl.nextTurn].x )
+    switch (snakeEl.direction) {
+      case "left":
+        if (snakeEl.x - snakeSpeedLocal < 0) {
+          snakeEl.x = fieldWidth;
+          break;
+        }
+        snakeEl.x -= snakeSpeedLocal;
+        break;
+
+      case "up":
+        if (snakeEl.y - snakeSpeedLocal < 0) {
+          snakeEl.y = fieldHeight;
+          break;
+        }
+        snakeEl.y -= snakeSpeedLocal
+        break;
+
+      case "right":
+        if (snakeEl.x + snakeSpeedLocal > fieldWidth) {
+          snakeEl.x = 0;
+          break;
+        }
+        snakeEl.x += snakeSpeedLocal
+        break;
+
+      case "down":
+        if (snakeEl.y + snakeSpeedLocal > fieldHeight) {
+          snakeEl.y = 0;
+          break;
+        }
+        snakeEl.y += snakeSpeedLocal
+        break;
+    }
   }
 }
 
-function drawFood({x, y}) {
+function collisionHandler(target, x, y) {
+  if (target === "food") {
+    foodPos = drawFood({});
+    setTimeout(() => {
+      snake[snake.length] = {
+        nextTurn: 0,
+        direction: snake[snake.length-1].direction,
+        x: snake[snake.length-1].x + x,
+        y: snake[snake.length-1].y + y,
+      }
+    }, 0);
+  }else if (target === "snake") {
+    console.log("Game over!");
+  }
+}
+
+function drawFood({x = undefined, y = undefined}) {
   ctx.fillStyle = "red"
   const foodPosition = {
-    x: Math.floor(Math.random() * (fieldWidth - 40) / cellSize) * cellSize,
-    y: Math.floor(Math.random() * (fieldHeight - 40) / cellSize) * cellSize
+    x: Math.floor(Math.random() * (fieldWidth - cellSize * 2) + cellSize),
+    y: Math.floor(Math.random() * (fieldHeight - cellSize * 2) + cellSize),
   }
 
   if ( (x !== undefined) && (y !== undefined) ) {
@@ -93,15 +151,20 @@ function userControl(event) {
 
   const direction = directions[event.keyCode];
 
-  if ( (direction === "left") && (snakeDirection !== "right") ) {
-    snakeDirection = "left";
-  }else if ( (direction === "right") && (snakeDirection !== "left") ) {
-    snakeDirection = "right";
-  }else if ( (direction === "down") && (snakeDirection !== "up") ) {
-    snakeDirection = "down";
-  }else if ( (direction === "up") && (snakeDirection !== "down") ) {
-    snakeDirection = "up";
+  turnHistory.push({
+    x: snake[0].x,
+    y: snake[0].y,
+  })
+
+  if ( (direction === "left") && (snake[0].direction !== "right") ) {
+    snake[0].direction = "left";
+  }else if ( (direction === "right") && (snake[0].direction !== "left") ) {
+    snake[0].direction = "right";
+  }else if ( (direction === "down") && (snake[0].direction !== "up") ) {
+    snake[0].direction = "down";
+  }else if ( (direction === "up") && (snake[0].direction !== "down") ) {
+    snake[0].direction = "up";
   }
 }
 
-setInterval(draw, 100);
+setInterval(draw, frameRate);
