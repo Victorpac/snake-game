@@ -28,7 +28,38 @@
     <input type="button" value="Try again!" id="newGameButton">
   </div>
 
-  <canvas class="game-field" id="gameField" width="800" height="800"></canvas>
+  <div class="container">
+    <canvas class="game-field" id="gameField" width="800" height="800"></canvas>
+
+    <div class="">
+      <h5 class="game-score">Score: <span id="scoreCounter"></span></h5>
+      <p class="game-score-record">Record: <span id="recordScore"></span></p>
+
+      <div class="settings-menu">
+        <div class="settings-menu__gameBorders">
+          <label class="toggle" for="settingsSwitch1">
+            <input type="checkbox" role="switch" class="toggle__element" id="settingsSwitch1" />
+            <div class="toggle__decor" aria-hidden="true">
+              <div class="toggle__thumb"></div>
+            </div>
+            <span class="toggle__label">Disable borders</span>
+          </label>
+        </div>
+        <div class="settings-menu__gameSpeed">
+          <label class="toggle" for="settingsSwitch2">
+            <input type="number" class="toggle__field" id="settingsSwitch2" />
+            <span class="toggle__label">Game speed</span>
+          </label>
+        </div>
+        <div class="settings-menu__gridSize">
+          <label class="toggle" for="settingsSwitch3">
+            <input type="number" class="toggle__field" id="settingsSwitch3"/>
+            <span class="toggle__label">Snake size</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="js/app.js"></script>
 
