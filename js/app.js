@@ -142,7 +142,7 @@ function gameOver() {
 
 function newGame() {
   game.isOver = false;
-  preferences.gameScore = 0;
+  game.gameScore = 0;
   DOMElements.gameScoreCounter.innerHTML = game.score;
 
   snake = [{
